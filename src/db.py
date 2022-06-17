@@ -76,7 +76,10 @@ def allow_command(chat_id, command):
         sql = db.cursor()
         commands = sql.execute(f"SELECT command FROM commands WHERE chat_id = '{chat_id}'").fetchone()
         commands = '' if commands is None else commands[0]
-        commands = commands.replace(command, '')
+        commands = list(commands.split())
+        if command in commands:
+            commands.remove(command)
+        commands = ' '.join(commands)
         sql.execute(f"UPDATE commands SET command = ('{commands.strip()}') WHERE chat_id = '{chat_id}'")
         db.commit()
         return True
