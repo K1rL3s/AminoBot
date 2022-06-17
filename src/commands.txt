@@ -1,0 +1,53 @@
+8ball
+a
+allow
+block
+blockedlist
+bot
+chat
+chatimages
+chatmanage
+choice
+coin
+com
+duel
+duel no
+duel send
+duel shot
+duel yes
+endvc
+fancy
+follow
+fun
+get
+help
+info
+joinchat
+joincom
+kickorg
+lurk
+mafia
+mention
+msg
+ping
+report
+roll
+rr
+rr ban
+rr create
+rr join
+rr kick
+rr leave
+rr list
+rr shot
+rr spin
+rr start
+rr stop
+rr unban
+save
+startvc
+sticker
+tr
+unfollow
+upload
+user
