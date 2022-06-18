@@ -12,9 +12,9 @@ def on_chat_invite(data):
         sub_client = amino.SubClient(comId=com_id, profile=client.profile)
         subs[com_id] = sub_client
     sub_client.join_chat(chat_id)
-    return sub_client.send_message(chatId=chat_id, message=
-                                   '[c]Hello <3\n'
-                                   f'Use {PREFIX}help for command list.')
+    sub_client.send_message(chatId=chat_id, message=
+                            '[c]Hello <3\n'
+                            f'Use {PREFIX}help for command list.')
 
 
 @client.event("on_text_message")
@@ -29,12 +29,6 @@ def on_text_message(data):
         sub_client = amino.SubClient(comId=com_id, profile=client.profile)
         subs[com_id] = sub_client
     chat_id = data['chatMessage']['threadId']
-    chat_info = sub_client.get_chat_thread(chat_id)
-    chat_host_id = chat_info.json['author']['uid']
-    chat_host_name = chat_info.json['author']['nickname']
-    chat_managers = [chat_host_id]
-    if chat_info.coHosts is not None:
-        chat_managers.extend(chat_info.coHosts)
     author_name = data['chatMessage']['author']['nickname']
     author_id = data['chatMessage']['author']['uid']
     msg_id = data['chatMessage']['messageId']
@@ -57,6 +51,13 @@ def on_text_message(data):
     if content[0] in blocked:
         return sub_client.send_message(**kwargs, message='This command is blocked here.')
 
+    chat_info = sub_client.get_chat_thread(chat_id)
+    chat_host_id = chat_info.json['author']['uid']
+    chat_host_name = chat_info.json['author']['nickname']
+    chat_managers = [chat_host_id]
+    if chat_info.coHosts is not None:
+        chat_managers.extend(chat_info.coHosts)
+    
     if content[0] == 'help':
         return sub_client.send_message(**kwargs, message=system_messages['help'])
 
@@ -91,7 +92,7 @@ def on_text_message(data):
     if content[0] == 'allow':
         if author_id not in chat_managers:
             return sub_client.send_message(**kwargs, message='You are not a Host or coHost.')
-        command = content[1].lower()
+        command = content[1]
         if allow_command(chat_id, command):
             return sub_client.send_message(**kwargs, message=f'Command "{command}" allowed!')
         return sub_client.send_message(**kwargs, message=f'Cant allow this command!')
@@ -99,7 +100,7 @@ def on_text_message(data):
     if content[0] == 'block':
         if author_id not in chat_managers:
             return sub_client.send_message(**kwargs, message='You are not a Host or coHost.')
-        command = content[1].lower()
+        command = content[1]
         if block_command(chat_id, command):
             return sub_client.send_message(**kwargs, message=f'Command "{command}" blocked!')
         return sub_client.send_message(**kwargs, message=f'Cant block this command!')
@@ -146,7 +147,7 @@ def on_text_message(data):
         if len(content) == 1:
             return sub_client.send_message(**kwargs, message=system_messages['duel'])
 
-        if content[1].lower() == 'no':
+        if content[1] == 'no':
             if author_id in duels_first_dict.keys():
                 second = duels_first_dict[author_id][1]
                 stop_duel(author_id, second)
@@ -157,7 +158,7 @@ def on_text_message(data):
                 return sub_client.send_message(**kwargs, message='Your duel request has been cancelled.')
             return sub_client.send_message(**kwargs, message='You dont have any requests.')
 
-        if content[1].lower() == 'send':
+        if content[1] == 'send':
             first = author_id
             second = data['chatMessage']['extensions']['mentionedArray'][0]['uid']
             if first in duels_first_dict.keys() or first in duels_second_dict.keys():
@@ -175,7 +176,7 @@ def on_text_message(data):
                                     f'({PREFIX}duel yes, {PREFIX}duel no)')
             return
 
-        if content[1].lower() == 'yes':
+        if content[1] == 'yes':
             second = author_id
             if second in duels_first_dict.keys():
                 return sub_client.send_message(**kwargs, message='You already have a duel request.')
@@ -190,7 +191,7 @@ def on_text_message(data):
                                     f'({PREFIX}duel shot, <${duel.who_start_name}$> starts)')
             return
 
-        if content[1].lower() == 'shot':
+        if content[1] == 'shot':
             if author_id not in duels_started.keys():
                 return sub_client.send_message(**kwargs, message='You dont have a duel right now.')
             duel = duels_started[author_id]
@@ -315,18 +316,18 @@ def on_text_message(data):
         if len(content) == 1:
             return sub_client.send_message(**kwargs, message=system_messages['rr'])
 
-        if content[1].lower() not in ('leave', 'start', 'shot', 'spin', 'stop', 'list', 'kick', 'create', 'join', 'ban', 'unban'):
+        if content[1] not in ('leave', 'start', 'shot', 'spin', 'stop', 'list', 'kick', 'create', 'join', 'ban', 'unban'):
             return
 
-        if content[1].lower() in ('leave', 'start', 'shot', 'spin', 'stop', 'list', 'kick', 'ban', 'unban'):
+        if content[1] in ('leave', 'start', 'shot', 'spin', 'stop', 'list', 'kick', 'ban', 'unban'):
             if author_id not in rr_members.keys():
                 return sub_client.send_message(**kwargs, message='You are not in the room now.')
 
-        if content[1].lower() in ('create', 'join'):
+        if content[1] in ('create', 'join'):
             if author_id in rr_members.keys():
                 return sub_client.send_message(**kwargs, message='You are already in the game room.')
 
-        if content[1].lower() == 'create':
+        if content[1] == 'create':
             room_name = content[2]
             if room_name in rr_rooms.keys():
                 return sub_client.send_message(**kwargs, message='This name is taken. Use another name for room.')
@@ -339,7 +340,7 @@ def on_text_message(data):
                                            f'[c]{PREFIX}rr ban @notify,\n'
                                            f'[c]{PREFIX}rr unban @notify)')  # 1
 
-        if content[1].lower() == 'join':
+        if content[1] == 'join':
             room_name = content[2]
             if room_name not in rr_rooms.keys():
                 return sub_client.send_message(**kwargs, message='Wrong room name.')
@@ -356,11 +357,11 @@ def on_text_message(data):
         room_name = rr_members[author_id]
         rr, rr_chat = rr_rooms[room_name]
 
-        if content[1].lower() in ('start', 'stop', 'kick', 'ban', 'unban'):
+        if content[1] in ('start', 'stop', 'kick', 'ban', 'unban'):
             if author_id != rr.org_id:
                 return sub_client.send_message(**kwargs, message=f'You are not the creator "{room_name}".')
 
-        if content[1].lower() == 'leave':
+        if content[1] == 'leave':
             if author_id == rr.org_id:
                 return sub_client.send_message(**kwargs, message=f'Use [{PREFIX}rr stop] to delete your room.')
             rr.remove_member(author_id, author_name)
@@ -374,17 +375,17 @@ def on_text_message(data):
             return sub_client.send_message(chatId=chat_id, mentionUserIds=[rr.players[0][0]], message=
                                            f'[c]{author_name} leaved.\n[c]Next player: <${rr.players[0][1]}$>!')
 
-        if content[1].lower() == 'stop':
+        if content[1] == 'stop':
             rr.stop()
             return sub_client.send_message(**kwargs, message=f'Succesfully delete "{room_name}".')
 
         if rr_chat != chat_id:  # !
             return sub_client.send_message(**kwargs, message='The game is in another chat.')
 
-        if content[1].lower() == 'list':
+        if content[1] == 'list':
             return sub_client.send_message(**kwargs, message='\n'.join(rr.list()))
 
-        if content[1].lower() == 'kick':
+        if content[1] == 'kick':
             kick_id = data['chatMessage']['extensions']['mentionedArray'][0]['uid']
             if kick_id == rr.org_id:
                 return sub_client.send_message(**kwargs, message=f'Cannot kick the owner.')
@@ -401,7 +402,7 @@ def on_text_message(data):
             return sub_client.send_message(chatId=chat_id, mentionUserIds=[rr.players[0][0]], message=
                                            f'[bc]Game over!\n[c]Winner: <${rr.players[0][1]}$>!')
 
-        if content[1].lower() == 'ban':
+        if content[1] == 'ban':
             ban_id = data['chatMessage']['extensions']['mentionedArray'][0]['uid']
             if ban_id == rr.org_id:
                 return sub_client.send_message(**kwargs, message=f'Cannot ban the owner.')
@@ -411,7 +412,7 @@ def on_text_message(data):
             if answer == 'ok':
                 return sub_client.send_message(**kwargs, message=f'The player succesfully banned!'
                                                                  f'\nUse "{PREFIX}rr kick @notify" to kick.')
-        if content[1].lower() == 'unban':
+        if content[1] == 'unban':
             unban_id = data['chatMessage']['extensions']['mentionedArray'][0]['uid']
             if unban_id == rr.org_id:
                 return sub_client.send_message(**kwargs, message=f'Cannot unban the owner.')
@@ -422,7 +423,7 @@ def on_text_message(data):
                 return sub_client.send_message(**kwargs, message=f'The player succesfully unbanned!'
                                                                  f'\nUse "{PREFIX}rr join {room_name}" to join.')
 
-        if content[1].lower() == 'start':
+        if content[1] == 'start':
             answer = rr.start()
             if answer == 'notenough':
                 return sub_client.send_message(**kwargs, message=f'Not enough players to start. (At least 3, you have {len(rr.players)})')
@@ -434,7 +435,7 @@ def on_text_message(data):
                                            f'[c]There will be {len(rr.players) - 1} rounds and only one winner!\n'
                                            f'[c]({PREFIX}rr shot, {PREFIX}rr spin, {PREFIX}rr leave)')
 
-        if content[1].lower() == 'shot':
+        if content[1] == 'shot':
             answer = rr.game(author_id, author_name, 'shot')
             if answer == 'notstarted':
                 return sub_client.send_message(**kwargs, message='Game hasnt started yet.')
@@ -457,7 +458,7 @@ def on_text_message(data):
                 return sub_client.send_message(chatId=chat_id, mentionUserIds=[rr.players[0][0]], message=
                                                f'[bc]Game over!\n[c]Winner: <${rr.players[0][1]}$>!')
 
-        if content[1].lower() == 'spin':
+        if content[1] == 'spin':
             answer = rr.game(author_id, author_name, 'spin')
             if answer == 'notstarted':
                 return sub_client.send_message(**kwargs, message='Game hasnt started yet.')
@@ -519,5 +520,3 @@ def on_text_message(data):
         except Exception as e:
             return sub_client.send_message(**kwargs, message=f"{e}")
         return sub_client.send_message(**kwargs, message=user_message)
-
-    return
