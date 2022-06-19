@@ -45,7 +45,7 @@ def on_text_message(data):
 
     content[0] = content[0][len(PREFIX):]  # from ['!DuEL', 'yEs'] to ['duel', 'yEs']
 
-    blocked = blocked_commands(chat_id).split()
+    blocked = list(blocked_commands(chat_id).split())
     if 'all' in blocked and content[0] not in ('block', 'allow', 'blockedlist', 'help', 'chatmanage', 'report'):
         return sub_client.send_message(**kwargs, message=f'All comands are blocked here.\nUse "{PREFIX}allow all" to disable it.')
     if content[0] in blocked:
