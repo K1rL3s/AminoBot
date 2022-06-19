@@ -61,7 +61,10 @@ def block_command(chat_id, command):
         chat_ids = [i[0] for i in sql.execute("SELECT chat_id FROM commands")]
         if chat_id in chat_ids:
             commands = sql.execute(f"SELECT command FROM commands WHERE chat_id = '{chat_id}'").fetchone()[0].strip()
-            commands += ' ' + command
+            commands = list(commands.split())
+            if command not in commands:
+                commands.append(command)
+            commands = ' '.join(commands)
             sql.execute(f"UPDATE commands SET command = ('{commands.strip()}') WHERE chat_id = '{chat_id}'")
             db.commit()
         else:
