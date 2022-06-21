@@ -25,7 +25,7 @@ with sqlite3.connect('database.db', check_same_thread=False) as db:
     db.commit()
 
 
-def save_chat_in_db(chat_id, chat_name, chat_icon, chat_bg, chat_desc):
+def save_chat_in_db(chat_id: str, chat_name: str, chat_icon: str, chat_bg: str, chat_desc: str):
     with sqlite3.connect('database.db', check_same_thread=False) as db:
         sql = db.cursor()
         chat_ids = tuple([i[0] for i in sql.execute("SELECT chat_id FROM chats")])
@@ -38,7 +38,7 @@ def save_chat_in_db(chat_id, chat_name, chat_icon, chat_bg, chat_desc):
         return True
 
 
-def return_chat_info_from_db(chat_id):
+def return_chat_info_from_db(chat_id: str):
     with sqlite3.connect('database.db', check_same_thread=False) as db:
         sql = db.cursor()
         s = sql.execute(f"SELECT * FROM chats WHERE chat_id = '{chat_id}'")
@@ -46,7 +46,7 @@ def return_chat_info_from_db(chat_id):
         return chat_info
 
 
-def blocked_commands(chat_id):
+def blocked_commands(chat_id: str):
     with sqlite3.connect('database.db', check_same_thread=False) as db:
         sql = db.cursor()
         if chat_id not in [i[0] for i in sql.execute("SELECT chat_id FROM commands")]: return ''
@@ -54,7 +54,7 @@ def blocked_commands(chat_id):
         return commands.strip()
 
 
-def block_command(chat_id, command):
+def block_command(chat_id: str, command: str):
     if command in ('block', 'allow', 'blockedlist', 'report'): return False
     with sqlite3.connect('database.db', check_same_thread=False) as db:
         sql = db.cursor()
@@ -73,7 +73,7 @@ def block_command(chat_id, command):
         return True
 
 
-def allow_command(chat_id, command):
+def allow_command(chat_id: str, command: str):
     if command in ('block', 'allow', 'blockedlist', 'report', 'flag'): return False
     with sqlite3.connect('database.db', check_same_thread=False) as db:
         sql = db.cursor()

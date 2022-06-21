@@ -325,7 +325,6 @@ def func_sticker_info(sticker_info: dict, sub_client: amino.SubClient):
         f'Collection stickers: {collention_stickers}',
         f'Collection used count: {collection_used_count}'
         ))
-
     return sticker_message
 
 
@@ -404,8 +403,8 @@ def get_chat_lurkers(self: amino.SubClient, start: int = 0, size: int = 100):  #
 def id_from_url(url: str):
     url = url.strip('.,/')
     try:
-        var = client.get_from_code(url)
-        return var.objectId if var.objectId is not None else var.comId
+        from_code = client.get_from_code(url)
+        return from_code.objectId if from_code.objectId is not None else from_code.comId
     except Exception: return 'None'
 
 
@@ -422,15 +421,14 @@ def lurk_list(self: amino.SubClient, chatId: str):  # big thanks to vedansh#4039
 
 
 def mafia_roles(content: list):
-    names = [name.strip(',. ') for name in content]
-    mafia, doctor, police, lover, terrorist = 0, 0, 0, 0, 0
+    names = [name.strip(',.!-() ') for name in content]
+    mafia, doctor, police, lover = 0, 0, 0, 0
     if len(names) > 18 or len(names) < 3:
         return f'At least 3 and no more than 18. You have {len(names)}.'
     if len(names) >= 3: mafia += 1
     if len(names) >= 6: mafia += 1; doctor += 1
     if len(names) >= 7: police += 1
     if len(names) >= 9: mafia += 1; lover += 1
-    if len(names) >= 11: terrorist += 1
     if len(names) >= 12: mafia += 1
     innocents = len(names) - mafia - doctor - police - lover
     roles = ['Innocent'] * innocents + ['Mafia'] * mafia + ['Doctor'] * doctor + ['Police'] * police + ['Lover'] * lover + ['Terrorist'] * terrorist
@@ -451,7 +449,7 @@ def mention(message: str, chat_info: amino.lib.util.Thread, sub_client: amino.Su
 
 
 def report(content: list, user_id: str, com_id: str, chat_id: str, msg_time: str):
-    if len(content) == 0: raise Exception  # just '!report'
+    if len(content) == 0: raise Exception('No message after "report"')  # just '!report'
     try: user_link = client.get_from_id(user_id, 0, comId=com_id).shortUrl
     except Exception: user_link = '-'
     try: chat_link = client.get_from_id(chat_id, 12, comId=com_id).shortUrl
@@ -483,10 +481,10 @@ def save_chat(chat_id: str, sub_client: amino.SubClient):  # Save chat info in d
 def stop_duel(first: str, second: str):
     del duels_first_dict[first]
     del duels_second_dict[second]
-    try: del duels_started[first]
-    except KeyError: pass
-    try: del duels_started[second]
-    except KeyError: pass
+    if first in duels_started.keys():
+        del duels_started[first]
+    if second in duels_started.keys():
+        del duels_started[second]
 
 
 def upload_chat(chat_id: str, sub_client: amino.SubClient):
