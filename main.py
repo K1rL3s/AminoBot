@@ -37,13 +37,13 @@ def on_text_message(data):
     kwargs = {"chatId": chat_id, "replyTo": msg_id}  # "comId": com_id
     content = str(msg_content).lower().split()   # after that the newlines (\n) is removed
 
-    if len(content[0]) == len(PREFIX):  # content == "! sddfh", "! save" etc
+    if len(content[0]) == len(PREFIX):  # content == "! sddfh", "/ save" etc
         return
 
     if author_id == client.userId:  # it was a very big exploit
         return
 
-    content[0] = content[0][len(PREFIX):]  # from ['!DuEL', 'yEs'] to ['duel', 'yEs']
+    content[0] = content[0][len(PREFIX):]  # from ['!duel', 'yes'] to ['duel', 'yes'] (content is lower, line 38)
 
     blocked = list(blocked_commands(chat_id).split())
     if 'all' in blocked and content[0] not in ('block', 'allow', 'blockedlist', 'help', 'chatmanage', 'report'):
@@ -74,11 +74,7 @@ def on_text_message(data):
         return sub_client.send_message(**kwargs, message=system_messages['bot'])
 
     if content[0] == '8ball':
-        answers = ('It is certain', 'It is decidedly so', 'Without a doubt', 'Yes — definitely', 'You may rely on it',
-                   'As I see it, yes', 'Most likely', 'Outlook good', 'Signs point to yes', 'Yes',
-                   'Reply hazy, try again', 'Ask again later', 'Better not tell you now', 'Cannot predict now', 'Concentrate and ask again',
-                   'Don’t count on it', 'My reply is no', 'My sources say no', 'Outlook not so good', 'Very doubtful')
-        return sub_client.send_message(**kwargs, message=f'{rnd.choice(answers)}.')
+        return sub_client.send_message(**kwargs, message=f'{rnd.choice(system_messages["8ball"])}.')
 
     if content[0] == 'a':
         text = ' '.join(content[1:])
@@ -112,7 +108,7 @@ def on_text_message(data):
     if content[0] == 'chat':
         if len(content) != 1:  # for call with link
             chat_id = id_from_url(content[1])
-            if chat_id == 'None' or chat_id is None:  # bad link etc
+            if chat_id in ('None', None):  # bad link etc
                 return sub_client.send_message(**kwargs, message='Bad argument (link).')
         try: chat_message = func_chat_info(chat_id, sub_client)
         except Exception as error:
@@ -136,7 +132,7 @@ def on_text_message(data):
     if content[0] == 'com':
         if len(content) != 1:  # for call with link
             com_id = id_from_url(content[1])
-            if com_id == 'None' or com_id is None:  # bad link etc
+            if com_id in ('None', None):  # bad link etc
                 return sub_client.send_message(**kwargs, message='Bad argument (link).')
         try: com_message = func_com_info(com_id)
         except Exception as error:
@@ -220,6 +216,7 @@ def on_text_message(data):
     if content[0] == 'fancy':
         try: text = ' '.join(content[1:])  # 2000 / 33 = 60 symbols is max, 2k is limit for message
         except Exception: text = 'Bruh'
+        text = text[:60] if len(text) > 60 else text
         data = {'text': text, 'mode': 1}
         req = requests.post('https://finewords.ru/beafonts/gofonts.php', data=data)
         req.encoding = 'utf-8'
@@ -232,7 +229,7 @@ def on_text_message(data):
     if content[0] == 'get':
         try: url_id = str(id_from_url(content[1]))
         except Exception: url_id = 'None'
-        if url_id == 'None' or url_id is None:  #  bad link etc
+        if url_id in ('None', None):  #  bad link etc
             return sub_client.send_message(**kwargs, message='Bad argument (link).')
         return sub_client.send_message(**kwargs, message=url_id)
 
@@ -296,18 +293,17 @@ def on_text_message(data):
         except Exception: mentions = None
         try: reply_id = data['chatMessage']['extensions']['replyMessage']['messageId']
         except Exception: reply_id = None
-        message = msg_content[len(PREFIX) + 3:]
         return sub_client.send_message(chatId=chat_id, replyTo=reply_id, message=message, mentionUserIds=mentions)
 
     if content[0] == 'ping':
         message = ('<$Working now!$>',
-                   f'Host or coHost: {client.userId in chat_managers}')
+                   f'Host or coHost: {client.userId in chat_managers}.')
         return sub_client.send_message(**kwargs, message='\n'.join(message), mentionUserIds=[author_id])
 
     if content[0] == 'report':
         message = report(content[1:], author_id, com_id, chat_id, msg_time)
         subs[MAIN_COMID].send_message(chatId=REPORT_CHAT, message=message)
-        return sub_client.send_message(**kwargs, message='Your message has been sent to the person who hosts this version of the bot!')
+        return sub_client.send_message(**kwargs, message='Your message has been sent to the person who hosts the bot!')
 
     if content[0] == 'roll':
         return sub_client.send_message(**kwargs, message=roll(content))
@@ -492,6 +488,10 @@ def on_text_message(data):
         except KeyError:
             reply_content = ' '.join(content[1:])
             reply_id = msg_id
+        if reply_content is None:
+            return
+        if len(reply_content) == 0:
+            return
         translator = google_trans_new.google_translator()
         translated_text = translator.translate(reply_content)
         detected_result = translator.detect(reply_content)[1]  # ['ru', 'russian']
@@ -514,7 +514,7 @@ def on_text_message(data):
     if content[0] == 'user':
         if len(content) != 1:  # for call with link
             author_id = id_from_url(content[1])
-            if author_id == 'None' or author_id is None:  # bad link etc
+            if author_id in ('None', None):  # bad link etc
                 return sub_client.send_message(**kwargs, message='Bad argument (link).')
         try: user_message = func_user_info(author_id, sub_client)
         except Exception as e:
