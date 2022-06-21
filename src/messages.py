@@ -144,6 +144,7 @@ GitHub Link - github.com/K1rL3s/aminobot
 [c]Duel shot. Hit chance - 25%.
 """,
 
+
     "rr": f"""
 [bc]Russian Roulette
 [ic]{PREFIX}rr create (room-name)
