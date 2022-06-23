@@ -95,6 +95,9 @@ GitHub Link - github.com/K1rL3s/aminobot
 [ci]{PREFIX}tr (reply)/(text)
 [c]Translate reply message or your message.
 
+[ci]{PREFIX}truth/dare [rating]
+[c]Truth or Dare. Rating - pg, pg13, r.
+
 [bci]{PREFIX}duel/rr
 [c]Duel/RR commands.
 """,
