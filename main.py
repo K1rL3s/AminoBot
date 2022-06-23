@@ -139,6 +139,13 @@ def on_text_message(data):
             return sub_client.send_message(**kwargs, message=f"{error}")
         return sub_client.send_message(**kwargs, message=com_message)
 
+    if content[0] == 'dare':
+        rating = 'pg'
+        if len(content) > 1:
+            rating = content[1] if content[1] in ('pg', 'pg13', 'r') else 'pg'
+        dare = requests.get(f'https://api.truthordarebot.xyz/api/dare?rating={rating}').json()
+        sub_client.send_message(**kwargs, message=dare['question'])
+    
     if content[0] == 'duel':
         if len(content) == 1:
             return sub_client.send_message(**kwargs, message=system_messages['duel'])
@@ -497,6 +504,13 @@ def on_text_message(data):
         detected_result = translator.detect(reply_content)[1]  # ['ru', 'russian']
         message = f'[ic]{translated_text}\n\n[c]Translated from {detected_result}.'
         return sub_client.send_message(chatId=chat_id, replyTo=reply_id, message=message)
+    
+    if content[0] == 'truth':
+        rating = 'pg'
+        if len(content) > 1:
+            rating = content[1] if content[1] in ('pg', 'pg13', 'r') else 'pg'
+        truth = requests.get(f'https://api.truthordarebot.xyz/api/truth?rating={rating}').json()
+        sub_client.send_message(**kwargs, message=truth['question'])
 
     if content[0] == 'unfollow':
         sub_client.unfollow(userId=author_id)
