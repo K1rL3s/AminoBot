@@ -431,7 +431,7 @@ def mafia_roles(content: list):
     if len(names) >= 9: mafia += 1; lover += 1
     if len(names) >= 12: mafia += 1
     innocents = len(names) - mafia - doctor - police - lover
-    roles = ['Innocent'] * innocents + ['Mafia'] * mafia + ['Doctor'] * doctor + ['Police'] * police + ['Lover'] * lover + ['Terrorist'] * terrorist
+    roles = ['Innocent'] * innocents + ['Mafia'] * mafia + ['Doctor'] * doctor + ['Police'] * police + ['Lover'] * lover
     rnd.shuffle(roles)
     mafia_message = [f'Role list for {len(names)} players:'] + [f'{name} - {roles}' for name, roles, in zip(names, roles)]
     return '\n'.join(mafia_message)
