@@ -1,4 +1,4 @@
-import amino
+import aminofix as amino
 import random as rnd
 import requests
 import time
