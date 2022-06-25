@@ -221,13 +221,14 @@ def on_text_message(data):
         return sub_client.send_message(**kwargs, message='Successfully!')
 
     if content[0] == 'fancy':
-        try: text = ' '.join(content[1:])  # 2000 / 33 = 60 symbols is max, 2k is limit for message
-        except Exception: text = 'Bruh'
-        text = text[:60] if len(text) > 60 else text
+        text = ' '.join(msg_content[len(PREFIX) + 6:].split())
+        if len(text) == 0:
+            text = 'Bruh'
+        text = text[:60] if len(text) > 60 else text  # 2000 / 33 = 60 symbols is max, 2k is limit for message
         data = {'text': text, 'mode': 1}
         req = requests.post('https://finewords.ru/beafonts/gofonts.php', data=data)
         req.encoding = 'utf-8'
-        return sub_client.send_message(**kwargs, message='\n'.join([item for item in req.json().values()]))
+        return sub_client.send_message(**kwargs, message='\n'.join(list(set([item for item in req.json().values()]))))
 
     if content[0] == 'follow':
         sub_client.follow(userId=author_id)
@@ -294,7 +295,7 @@ def on_text_message(data):
         return
 
     if content[0] == 'msg':
-        message = msg_content[len(PREFIX) + 3:]
+        message = msg_content[len(PREFIX) + 4:]
         if not message: return
         try: mentions = [uid['uid'] for uid in data['chatMessage']['extensions']['mentionedArray']]
         except Exception: mentions = None
