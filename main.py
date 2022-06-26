@@ -45,7 +45,7 @@ def on_text_message(data):
 
     content[0] = content[0][len(PREFIX):]  # from ['!duel', 'yes'] to ['duel', 'yes'] (content is lower, line 38)
 
-    blocked = list(blocked_commands(chat_id).split())
+    blocked = list(database.blocked_commands_in_chat(chat_id).split())
     if 'all' in blocked and content[0] not in ('block', 'allow', 'blockedlist', 'help', 'chatmanage', 'report'):
         return sub_client.send_message(**kwargs, message=f'All comands are blocked here.\nUse "{PREFIX}allow all" to disable it.')
     if content[0] in blocked:
@@ -89,7 +89,7 @@ def on_text_message(data):
         if author_id not in chat_managers:
             return sub_client.send_message(**kwargs, message='You are not a Host or coHost.')
         command = content[1]
-        if allow_command(chat_id, command):
+        if database.allow_command_in_chat(chat_id, command):
             return sub_client.send_message(**kwargs, message=f'Command "{command}" allowed!')
         return sub_client.send_message(**kwargs, message=f'Cant allow this command!')
 
@@ -97,12 +97,12 @@ def on_text_message(data):
         if author_id not in chat_managers:
             return sub_client.send_message(**kwargs, message='You are not a Host or coHost.')
         command = content[1]
-        if block_command(chat_id, command):
+        if database.block_command_in_chat(chat_id, command):
             return sub_client.send_message(**kwargs, message=f'Command "{command}" blocked!')
         return sub_client.send_message(**kwargs, message=f'Cant block this command!')
 
     if content[0] == 'blockedlist':
-        blocked_list = ', '.join(sorted(list(set(blocked_commands(chat_id).split()))))
+        blocked_list = ', '.join(sorted(list(set(database.blocked_commands_in_chat(chat_id).split()))))
         return sub_client.send_message(**kwargs, message=f'Blocked commands: {blocked_list if blocked_list else "Nope"}.')
 
     if content[0] == 'chat':
