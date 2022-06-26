@@ -8,17 +8,17 @@ from src.google_trans import google_trans_new
 
 
 client = amino.Client()
-client.login(email=EMAIL, password=PASSWORD)  # check db.py
-
-subs = {MAIN_COMID: amino.SubClient(comId=MAIN_COMID, profile=client.profile)}  # MAIN_COMID - check db.py
+client.login(email=EMAIL, password=PASSWORD)
+subs = {MAIN_COMID: amino.SubClient(comId=MAIN_COMID, profile=client.profile)}
+database = Database(DATABASE_NAME)
 print('ready!')
 
-duels_first_dict = dict()  # userId who invited : Duel Object
+duels_first_dict = dict()   # userId who invited : Duel Object
 duels_second_dict = dict()  # userId who was invited : userId who invited
-duels_started = dict()   # userIds who is currently dueling : Duel Object
+duels_started = dict()      # userIds who is currently dueling : Duel Object
 
-rr_rooms = dict()  # name_rr : (RR object, chat_id)
-rr_members = dict()  # member_id : name_rr
+rr_rooms = dict()           # name_rr : (RR object, chat_id)
+rr_members = dict()         # member_id : name_rr
 
 
 # client.get_from_id
@@ -475,7 +475,7 @@ def roll(content: list):
 def save_chat(chat_id: str, sub_client: amino.SubClient):  # Save chat info in database.db
     chat = sub_client.get_chat_thread(chat_id)
     chat_id, chat_name, chat_icon, chat_bg, chat_desc = chat.chatId, chat.title, chat.icon, chat.backgroundImage, chat.content
-    return save_chat_in_db(chat_id, chat_name, chat_icon, chat_bg, chat_desc)
+    return database.save_chat_in_db(chat_id, chat_name, chat_icon, chat_bg, chat_desc)
 
 
 def stop_duel(first: str, second: str):
@@ -488,7 +488,7 @@ def stop_duel(first: str, second: str):
 
 
 def upload_chat(chat_id: str, sub_client: amino.SubClient):
-    materials = return_chat_info_from_db(chat_id)
+    materials = database.return_chat_info_from_db(chat_id)
     if materials is None: return False
     title, icon, bg, desc = materials[1:]
     sub_client.edit_chat(chatId=chat_id, title=title, icon=icon, content=desc)
