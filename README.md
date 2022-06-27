@@ -2,8 +2,8 @@
   AminoBot
 </h1>
 
-Bot for Amino based on [amino.py](https://github.com/Slimakoi/Amino.py) ([docs](https://aminopy.readthedocs.io/en/latest/))\
-Only supports Python >=3.6, to install amino.py, run `pip install amino.py`.
+Bot for Amino based on [amino.fix](https://pypi.org/project/amino.fix) and [amino.py](https://github.com/Slimakoi/Amino.py) ([docs](https://aminopy.readthedocs.io/en/latest/))\
+Only supports Python >=3.6, to install amino.py, run `pip install amino.fix`.
 
 #### How to start?
 1. Make a folder on your pc.
