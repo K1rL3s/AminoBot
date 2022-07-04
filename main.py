@@ -285,6 +285,11 @@ def on_text_message(data):
 
     if content[0] == 'mafia':
         return sub_client.send_message(**kwargs, message=mafia_roles(content[1:]))
+    
+    if content[0] == 'media':
+        # link of voice messages, image messages, video and gif messages etc.
+        reply_media_message = data['chatMessage']['extensions']['replyMessage']['mediaValue']
+        return sub_client.send_message(**kwargs, message=reply_media_message)
 
     if content[0] == 'mention':
         if author_id != chat_host_id:
