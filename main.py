@@ -204,7 +204,7 @@ def on_text_message(data):
             if message == 'noturn':
                 return sub_client.send_message(**kwargs, message='Not your turn!')
             if message == 'miss':
-                return sub_client.send_message(**kwargs, message=f'Miss. Next player shot!\n'
+                return sub_client.send_message(**kwargs, message=f'Miss. Next player, shoot!\n'
                                                                  f'Shots: {duel.shots}')
             if message == 'win':
                 name = duel.first_name if author_id == duel.first else duel.second_name
