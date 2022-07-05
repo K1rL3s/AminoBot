@@ -1,5 +1,6 @@
 from src.db import PREFIX
 
+
 system_messages = {
     "help": f"""
 [bc]Command categories:
@@ -25,7 +26,7 @@ GitHub Link - github.com/K1rL3s/aminobot
 [ci]{PREFIX}chatimages
 [c]The сhat's background and icon.
 
-[ci]{PREFIX}media
+[ci]{PREFIX}media (reply)
 [c]Link of image, video or voice message.
 
 [ci]{PREFIX}sticker (reply)
