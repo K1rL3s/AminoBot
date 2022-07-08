@@ -141,7 +141,7 @@ def on_text_message(data):
 
     if content[0] == 'dare':
         rating = 'pg'
-        if len(content) > 1:
+        if len(content) != 1:
             rating = content[1] if content[1] in ('pg', 'pg13', 'r') else 'pg'
         dare = requests.get(f'https://api.truthordarebot.xyz/api/dare?rating={rating}').json()
         sub_client.send_message(**kwargs, message=dare['question'])
@@ -235,8 +235,7 @@ def on_text_message(data):
         return sub_client.send_message(**kwargs, message='Successful subscription!')
 
     if content[0] == 'get':
-        try: url_id = str(id_from_url(content[1]))
-        except Exception: url_id = 'None'
+        url_id = str(id_from_url(content[1]))
         if url_id in ('None', None):  #  bad link etc
             return sub_client.send_message(**kwargs, message='Bad argument (link).')
         return sub_client.send_message(**kwargs, message=url_id)
@@ -501,9 +500,7 @@ def on_text_message(data):
         except KeyError:
             reply_content = ' '.join(content[1:])
             reply_id = msg_id
-        if reply_content is None:
-            return
-        if len(reply_content) == 0:
+        if reply_content is None or len(reply_content) == 0:
             return
         translator = google_trans_new.google_translator()
         translated_text = translator.translate(reply_content)
@@ -513,7 +510,7 @@ def on_text_message(data):
     
     if content[0] == 'truth':
         rating = 'pg'
-        if len(content) > 1:
+        if len(content) != 1:
             rating = content[1] if content[1] in ('pg', 'pg13', 'r') else 'pg'
         truth = requests.get(f'https://api.truthordarebot.xyz/api/truth?rating={rating}').json()
         sub_client.send_message(**kwargs, message=truth['question'])
