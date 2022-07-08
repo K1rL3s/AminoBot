@@ -9,7 +9,7 @@ from src.google_trans import google_trans_new
 
 client = amino.Client()
 client.login(email=EMAIL, password=PASSWORD)
-subs = {MAIN_COMID: amino.SubClient(comId=MAIN_COMID, profile=client.profile)}
+subs = {MAIN_COMID: amino.SubClient(comId=MAIN_COMID, profile=client.profile), '0': client}  # '0' - Global Chats
 database = Database(DATABASE_NAME)
 print('ready!')
 
