@@ -109,8 +109,8 @@ class RussianRoulette:
     def stop(self):
         for player in self.players:
             del rr_members[player[0]]
-        try: del rr_members[self.org_id]
-        except KeyError: pass
+        if self.org_id in rr_members:
+            del rr_members[self.org_id]
         del rr_rooms[self.roulette_name]
 
     def finish(self):
