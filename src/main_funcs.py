@@ -73,6 +73,9 @@ class RussianRoulette:
         self.add_member(org_id, org_name)
         self.bullets = [0, 0, 0, 0, 0, 0]
         rr_rooms[roulette_name] = tuple([self, chat_id])
+    
+    def __len__(self):
+        return len(self.players)
 
     def add_member(self, player_id, player_name):
         if self.started: return 'gamestarted'
