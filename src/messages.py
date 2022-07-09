@@ -184,6 +184,16 @@ GitHub Link - github.com/K1rL3s/aminobot
 [ic]{PREFIX}rr spin
 [c]Drum spinning (bullets mixing).
 """,
+    
+    "roulette": f"""
+[bc]Casino-roulette
+[ci]{PREFIX}casino (bet)
+[c]Starts the game and places a bet
+[c](bet - number [0; 36] or color: red, black, green)
+
+[ci]{PREFIX}casino leave
+[c]Cancels your bet.
+""",
 
 
     "8ball": ('It is certain', 'It is decidedly so', 'Without a doubt', 'Yes — definitely', 'You may rely on it',
