@@ -104,6 +104,42 @@ def on_text_message(data):
     if content[0] == 'blockedlist':
         blocked_list = ', '.join(sorted(list(set(database.blocked_commands_in_chat(chat_id).split()))))
         return sub_client.send_message(**kwargs, message=f'Blocked commands: {blocked_list if blocked_list else "Nope"}.')
+    
+    if content[0] == 'casino':
+        if len(content) == 1:
+            return sub_client.send_message(**kwargs, message=system_messages['roulette'])
+
+        if content[1] == 'leave':
+            if chat_id not in casino_chats.keys():
+                return sub_client.send_message(**kwargs, message='There is no game here.')
+            casino = casino_chats[chat_id]
+            answer = casino.del_player(author_id)
+            if answer == 'yet':
+                return sub_client.send_message(**kwargs, message='You didnt play here.')
+            if answer == 'deleted':
+                return sub_client.send_message(**kwargs, message='The roulette is stopped, there are no players left at the table.')
+            if answer == 'ok':
+                return sub_client.send_message(**kwargs, message="You've taken your bet, the roulette keeps turning.")
+
+        if not (content[1].isdigit() or content[1] in ('red', 'black', 'green')):
+            return
+
+        if content[1].isdigit():
+            if not 0 <= int(content[1]) <= 36:
+                return sub_client.send_message(**kwargs, message='You can bet on numbers [0; 36]')
+
+        player_bet = content[1]
+
+        if chat_id in casino_chats.keys():
+            casino = casino_chats[chat_id]
+        else:
+            casino = CasinoRoulette(chat_id, sub_client)
+
+        answer = casino.add_player(author_id, author_name, player_bet)
+        if answer == 'yet':
+            return sub_client.send_message(**kwargs, message='You have already placed a bet here.')
+        if answer == 'ok':
+            return sub_client.send_message(**kwargs, message='Your bet has been accepted, wait for the roulette to stop.')
 
     if content[0] == 'chat':
         if len(content) != 1:  # for call with link
