@@ -20,6 +20,8 @@ duels_started = dict()      # userIds who is currently dueling : Duel Object
 rr_rooms = dict()           # name_rr : (RR object, chat_id)
 rr_members = dict()         # member_id : name_rr
 
+casino_chats = dict()    # chatId : Casino Object
+
 
 # client.get_from_id
 # ObjectType. 0 - user, 12 - chat
@@ -149,6 +151,59 @@ class RussianRoulette:
                 return 'hit'
             self.players.append(self.players.pop(0))
             return 'miss'
+
+
+class CasinoRoulette:
+    def __init__(self, chat_id, sub_client):
+        self.chat_id = chat_id
+        self.players = dict()
+        self.sub_client = sub_client
+        self.timer = Timer(30, self.game)
+        self.timer.start()
+        casino_chats[chat_id] = self
+
+    def add_player(self, player_id, player_name, player_bet):
+        if player_id in self.players.keys():
+            return 'yet'
+        self.players[player_id] = (player_name, player_bet)
+        return 'ok'
+
+    def del_player(self, player_id):
+        if player_id not in self.players.keys():
+            return 'yet'
+        del self.players[player_id]
+        if len(self.players) == 0:
+            del casino_chats[self.chat_id]
+            self.timer.cancel()
+            return 'deleted'
+        return 'ok'
+
+    def game(self):
+        red = {1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36}
+        black = {2, 4, 6, 8, 10, 11, 13, 15, 16, 17, 20, 22, 24, 26, 28, 29, 31, 33, 35}
+        result_number = rnd.randint(0, 36)
+        if result_number in red:
+            color = 'red'
+        elif result_number in black:
+            color = 'black'
+        else:
+            color = 'green'
+
+        result_number = str(result_number)
+
+        message = [f'[bc]Roulette!\n[c]Result: {result_number} {color}.\n', 'Winners:']
+        mention_users = []
+        for uid, player in self.players.items():
+            name, bet = player
+            if bet in (result_number, color):
+                message.append(f'<${name}$>, bet - {bet}!')
+                mention_users.append(uid)
+
+        if len(message) == 2:
+            message.append('No one ;(')
+
+        self.sub_client.send_message(self.chat_id, '\n'.join(message), mentionUserIds=mention_users)
+        del casino_chats[self.chat_id]
 
 
 def coin():  # useless func xd
