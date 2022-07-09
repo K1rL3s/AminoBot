@@ -2,6 +2,7 @@ import aminofix as amino
 import random as rnd
 import requests
 import time
+from threading import Timer
 from src.db import *
 from src.messages import system_messages
 from src.google_trans import google_trans_new
