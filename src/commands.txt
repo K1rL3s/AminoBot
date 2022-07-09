@@ -4,6 +4,9 @@ allow
 block
 blockedlist
 bot
+casino
+casino leave
+casino (bet)
 chat
 chatimages
 chatmanage
