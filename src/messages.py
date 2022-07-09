@@ -102,8 +102,8 @@ GitHub Link - github.com/K1rL3s/aminobot
 [ci]{PREFIX}truth/dare [rating]
 [c]Truth or Dare. Rating - pg, pg13, r.
 
-[bci]{PREFIX}duel/rr
-[c]Duel/RR commands.
+[bci]{PREFIX}duel/rr/casino
+[c]Duel/RR/Casino commands.
 """,
 
 
