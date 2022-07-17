@@ -164,21 +164,28 @@ class CasinoRoulette:
     def game(self):
         red = {1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36}
         black = {2, 4, 6, 8, 10, 11, 13, 15, 16, 17, 20, 22, 24, 26, 28, 29, 31, 33, 35}
-        result_number = rnd.randint(0, 36)
+        result_number = rnd.randint(0, 37)  # 37 = 00
         if result_number in red:
             color = 'red'
         elif result_number in black:
             color = 'black'
         else:
             color = 'green'
+            
+        if result_number % 2 == 1:
+            odd_or_even = 'odd'
+        elif result_number % 2 == 0 and result_number not in (0, 37):
+            odd_or_even = 'even'
+        else:
+            odd_or_even = None
 
-        result_number = str(result_number)
+        result_number = str(result_number) if result_number in range(0, 36) else '00'
 
-        message = [f'[bc]Roulette!\n[c]Result: {result_number} {color}.\n', 'Winners:']
+        message = [f'[bc]Roulette!\n[c]Result: {result_number} {color}, {odd_or_even}.\n', 'Winners:']
         mention_users = []
         for uid, player in self.players.items():
             name, bet = player
-            if bet in (result_number, color):
+            if bet in (result_number, color, odd_or_even):
                 message.append(f'<${name}$>, bet - {bet}!')
                 mention_users.append(uid)
 
