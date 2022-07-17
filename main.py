@@ -136,6 +136,8 @@ def on_text_message(data):
                 return sub_client.send_message(**kwargs, message='You can bet on numbers [0; 36]')
 
         player_bet = content[1]
+        if player_bet.isdigit() and player_bet != '00':
+            player_bet = str(int(player_bet))  # '001' -> '1', '036' -> '36'
 
         if chat_id in casino_chats.keys():
             casino = casino_chats[chat_id]
