@@ -179,7 +179,7 @@ class CasinoRoulette:
         else:
             odd_or_even = None
 
-        result_number = str(result_number) if result_number in range(0, 36) else '00'
+        result_number = str(result_number) if result_number in range(0, 37) else '00'
 
         message = [f'[bc]Roulette!\n[c]Result: {result_number} {color}, {odd_or_even}.\n', 'Winners:']
         mention_users = []
