@@ -189,7 +189,9 @@ GitHub Link - github.com/K1rL3s/AminoBot
 [bc]Casino-roulette
 [ci]{PREFIX}casino (bet)
 [c]Starts the game and places a bet
-[c](bet - number [0; 36] or color: red, black, green)
+[c](bet - number [0; 36], 00
+[c]color: red, black, green
+[c]divide: odd, even)
 
 [ci]{PREFIX}casino leave
 [c]Cancels your bet.
