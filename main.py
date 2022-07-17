@@ -1,6 +1,13 @@
 from src.main_funcs import *
 
 
+client = amino.Client()
+client.login(email=EMAIL, password=PASSWORD)
+subs = {MAIN_COMID: amino.SubClient(comId=MAIN_COMID, profile=client.profile), '0': client}  # '0' - Global Chats
+database = Database(DATABASE_NAME)
+print('ready!')
+
+
 @client.event("on_chat_invite")
 @error_catcher
 def on_chat_invite(data):
@@ -143,10 +150,10 @@ def on_text_message(data):
 
     if content[0] == 'chat':
         if len(content) != 1:  # for call with link
-            chat_id = id_from_url(content[1])
+            chat_id = id_from_url(content[1], client)
             if chat_id in ('None', None):  # bad link etc
                 return sub_client.send_message(**kwargs, message='Bad argument (link).')
-        try: chat_message = func_chat_info(chat_id, sub_client)
+        try: chat_message = func_chat_info(chat_id, sub_client, sub_client)
         except Exception as error:
             return sub_client.send_message(**kwargs, message=f"{error}")
         return sub_client.send_message(**kwargs, message=chat_message)
@@ -167,10 +174,10 @@ def on_text_message(data):
 
     if content[0] == 'com':
         if len(content) != 1:  # for call with link
-            com_id = id_from_url(content[1])
+            com_id = id_from_url(content[1], client)
             if com_id in ('None', None):  # bad link etc
                 return sub_client.send_message(**kwargs, message='Bad argument (link).')
-        try: com_message = func_com_info(com_id)
+        try: com_message = func_com_info(com_id, client)
         except Exception as error:
             return sub_client.send_message(**kwargs, message=f"{error}")
         return sub_client.send_message(**kwargs, message=com_message)
@@ -271,7 +278,7 @@ def on_text_message(data):
         return sub_client.send_message(**kwargs, message='Successful subscription!')
 
     if content[0] == 'get':
-        url_id = str(id_from_url(content[1]))
+        url_id = str(id_from_url(content[1], client))
         if url_id in ('None', None):  #  bad link etc
             return sub_client.send_message(**kwargs, message='Bad argument (link).')
         return sub_client.send_message(**kwargs, message=url_id)
@@ -349,7 +356,7 @@ def on_text_message(data):
         return sub_client.send_message(**kwargs, message='\n'.join(message), mentionUserIds=[author_id])
 
     if content[0] == 'report':
-        message = report(content[1:], author_id, com_id, chat_id, msg_time)
+        message = report(client, content[1:], author_id, com_id, chat_id, msg_time)
         subs[MAIN_COMID].send_message(chatId=REPORT_CHAT, message=message)
         return sub_client.send_message(**kwargs, message='Your message has been sent to the person who hosts the bot!')
 
@@ -526,7 +533,7 @@ def on_text_message(data):
     if content[0] == 'sticker':
         reply_msg = data['chatMessage']['extensions']['replyMessage']
         sticker_info = reply_msg['extensions']['sticker']
-        sticker_message = func_sticker_info(sticker_info, sub_client)
+        sticker_message = func_sticker_info(sticker_info, client, sub_client)
         return sub_client.send_message(**kwargs, message=sticker_message)
 
     if content[0] == 'tr':  # thanks vedansh#4039
@@ -566,10 +573,10 @@ def on_text_message(data):
 
     if content[0] == 'user':
         if len(content) != 1:  # for call with link
-            author_id = id_from_url(content[1])
+            author_id = id_from_url(content[1], client)
             if author_id in ('None', None):  # bad link etc
                 return sub_client.send_message(**kwargs, message='Bad argument (link).')
-        try: user_message = func_user_info(author_id, sub_client)
+        try: user_message = func_user_info(author_id, client, sub_client)
         except Exception as e:
             return sub_client.send_message(**kwargs, message=f"{e}")
         return sub_client.send_message(**kwargs, message=user_message)
