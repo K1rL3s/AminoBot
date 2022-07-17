@@ -2,209 +2,15 @@ import aminofix as amino
 import random as rnd
 import requests
 import time
-from threading import Timer
 from src.db import *
 from src.messages import system_messages
+from src.minigames import *
 from src.google_trans import google_trans_new
-
-
-client = amino.Client()
-client.login(email=EMAIL, password=PASSWORD)
-subs = {MAIN_COMID: amino.SubClient(comId=MAIN_COMID, profile=client.profile), '0': client}  # '0' - Global Chats
-database = Database(DATABASE_NAME)
-print('ready!')
-
-duels_first_dict = dict()   # userId who invited : Duel Object
-duels_second_dict = dict()  # userId who was invited : userId who invited
-duels_started = dict()      # userIds who is currently dueling : Duel Object
-
-rr_rooms = dict()           # name_rr : (RR object, chat_id)
-rr_members = dict()         # member_id : name_rr
-
-casino_chats = dict()    # chatId : Casino Object
 
 
 # client.get_from_id
 # ObjectType. 0 - user, 12 - chat
 # if comId is None - check global, else - check in community. comId is str
-
-
-class Duel:
-    def __init__(self, first: str, second: str, f_name: str, s_name: str, chat_id: str):  # ids
-        # first and second is userIds
-        self.first = first
-        self.second = second
-        self.chat_id = chat_id
-        self.first_name = f_name
-        self.second_name = s_name
-        self.shots = 0
-        self.start = False
-        if rnd.randint(0, 1) == 0:
-            self.who_start_name = f_name
-            self.who_start_id = first
-        else:
-            self.who_start_name = s_name
-            self.who_start_id = second
-
-    def start_duel(self):
-        duels_started[self.first], duels_started[self.second] = self, self
-        self.start = True
-
-    def shot(self, user_id):
-        if not self.start:
-            return 'nostart'
-        if user_id == self.who_start_id:
-            if self.shots % 2 == 0:
-                self.shots += 1
-                return rnd.choices(('win', 'miss'), weights=(25, 75))[0]
-            return 'noturn'
-        if self.shots % 2 == 1:
-            self.shots += 1
-            return rnd.choices(('win', 'miss'), weights=(25, 75))[0]
-        return 'noturn'
-
-
-class RussianRoulette:
-    def __init__(self, org_id: str, org_name: str, chat_id: str, com_id: str, roulette_name: str):
-        self.org_id = org_id
-        self.roulette_name = roulette_name
-        self.chat_id = chat_id
-        self.com_id = com_id
-        self.started = False
-        self.players = []
-        self.banned = []
-        self.add_member(org_id, org_name)
-        self.bullets = [0, 0, 0, 0, 0, 0]
-        rr_rooms[roulette_name] = tuple([self, chat_id])
-    
-    def __len__(self):
-        return len(self.players)
-
-    def add_member(self, player_id, player_name):
-        if self.started: return 'gamestarted'
-        if player_id in self.banned: return 'banned'
-        self.players.append(tuple([player_id, player_name]))
-        rr_members[player_id] = self.roulette_name
-
-    def remove_member(self, player_id, player_name):
-        self.players.remove(tuple([player_id, player_name]))
-        if player_id != self.org_id:
-            del rr_members[player_id]
-
-    def ban(self, player_id):
-        if player_id in self.banned: return 'yet'
-        self.banned.append(player_id)
-        return 'ok'
-
-    def unban(self, player_id):
-        if player_id not in self.banned: return 'yet'
-        self.banned.remove(player_id)
-        return 'ok'
-
-    def start(self):
-        if len(self.players) < 3: return 'notenough'
-        if self.started: return 'started'
-        self.started = True
-        rnd.shuffle(self.players)
-        self.new_round()
-
-    def new_round(self):
-        self.bullets = [0, 0, 0, 0, 0, 0]
-        self.bullets[rnd.randint(0, len(self.bullets) - 1)] = 1
-
-    def stop(self):
-        for player in self.players:
-            del rr_members[player[0]]
-        if self.org_id in rr_members.keys():
-            del rr_members[self.org_id]
-        del rr_rooms[self.roulette_name]
-
-    def finish(self):
-        if len(self.players) == 1 and self.started:
-            self.stop()
-            return True
-        return False
-
-    def list(self):
-        return [f'{len(self.players)} players in "{self.roulette_name}":'] + [player[1] for player in self.players]
-
-    def kick(self, player_id):
-        for player in self.players:
-            if player[0] == player_id:
-                self.remove_member(*player)
-                self.new_round()
-                return player
-        return False
-
-    def game(self, player_id, player_name, command):
-        if not self.started:
-            return 'notstarted'
-        if player_id != self.players[0][0]:
-            return 'noturn'
-        elif command == 'spin':
-            self.new_round()
-        elif command == 'shot':
-            self.bullets.append(0)
-            result = self.bullets.pop(0)
-            if result == 1:
-                self.remove_member(player_id, player_name)
-                self.new_round()
-                return 'hit'
-            self.players.append(self.players.pop(0))
-            return 'miss'
-
-
-class CasinoRoulette:
-    def __init__(self, chat_id, sub_client):
-        self.chat_id = chat_id
-        self.players = dict()
-        self.sub_client = sub_client
-        self.timer = Timer(30, self.game)
-        self.timer.start()
-        casino_chats[chat_id] = self
-
-    def add_player(self, player_id, player_name, player_bet):
-        if player_id in self.players.keys():
-            return 'yet'
-        self.players[player_id] = (player_name, player_bet)
-        return 'ok'
-
-    def del_player(self, player_id):
-        if player_id not in self.players.keys():
-            return 'yet'
-        del self.players[player_id]
-        if len(self.players) == 0:
-            del casino_chats[self.chat_id]
-            self.timer.cancel()
-            return 'deleted'
-        return 'ok'
-
-    def game(self):
-        red = {1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36}
-        black = {2, 4, 6, 8, 10, 11, 13, 15, 16, 17, 20, 22, 24, 26, 28, 29, 31, 33, 35}
-        result_number = rnd.randint(0, 36)
-        if result_number in red:
-            color = 'red'
-        elif result_number in black:
-            color = 'black'
-        else:
-            color = 'green'
-
-        result_number = str(result_number)
-
-        message = [f'[bc]Roulette!\n[c]Result: {result_number} {color}.\n', 'Winners:']
-        mention_users = []
-        for uid, player in self.players.items():
-            name, bet = player
-            if bet in (result_number, color):
-                message.append(f'<${name}$>, bet - {bet}!')
-                mention_users.append(uid)
-
-        if len(message) == 2:
-            message.append('No one ;(')
-
-        self.sub_client.send_message(self.chat_id, '\n'.join(message), mentionUserIds=mention_users)
-        del casino_chats[self.chat_id]
 
 
 def coin():  # useless func xd
@@ -225,7 +31,7 @@ def error_message(kwargs: dict, sub_client: amino.SubClient):
     sub_client.send_message(**kwargs, message='The command failed, an error occurred. Contact the creator on github or person who hosts the bot for help.')
 
 
-def func_chat_info(chat_id: str, sub_client: amino.SubClient):
+def func_chat_info(chat_id: str, client: amino.Client, sub_client: amino.SubClient):
     info_chat = sub_client.get_chat_thread(chatId=chat_id)
     try: chat_title = 'No info' if info_chat.title is None else info_chat.title
     except Exception: chat_title = 'No info'
@@ -281,7 +87,7 @@ def func_chat_info(chat_id: str, sub_client: amino.SubClient):
     return chat_message
 
 
-def func_com_info(com_id: str):
+def func_com_info(com_id: str, client: amino.Client):
     if int(com_id) not in list(client.sub_clients(start=0, size=100).comId):  # more than 100?
         client.join_community(comId=com_id)
     info_com = client.get_community_info(com_id)
@@ -347,7 +153,7 @@ def func_com_info(com_id: str):
     return com_message
 
 
-def func_sticker_info(sticker_info: dict, sub_client: amino.SubClient):
+def func_sticker_info(sticker_info: dict, client: amino.Client, sub_client: amino.SubClient):
     try: sticker_icon = sticker_info['icon']
     except Exception: sticker_icon = 'No info'
     try: sticker_id = sticker_info['stickerId']
@@ -387,7 +193,7 @@ def func_sticker_info(sticker_info: dict, sub_client: amino.SubClient):
     return sticker_message
 
 
-def func_user_info(user_id: str, sub_client: amino.SubClient):  # for other info check info_user.json or objects.py
+def func_user_info(user_id: str, client: amino.Client, sub_client: amino.SubClient):  # for other info check info_user.json or objects.py
     info_user_com = sub_client.get_user_info(userId=user_id)
     info_user_amino = client.get_user_info(userId=user_id)
     try: user_name = 'No info' if info_user_com.nickname is None else info_user_com.nickname
@@ -459,7 +265,7 @@ def get_chat_lurkers(self: amino.SubClient, start: int = 0, size: int = 100):  #
     return amino.loads(response.text)
 
 
-def id_from_url(url: str):
+def id_from_url(url: str, client: amino.Client):
     url = url.strip('.,/')
     try:
         from_code = client.get_from_code(url)
@@ -467,9 +273,9 @@ def id_from_url(url: str):
     except Exception: return 'None'
 
 
-def lurk_list(self: amino.SubClient, chatId: str):  # big thanks to vedansh#4039
+def lurk_list(sub_client: amino.SubClient, chatId: str):  # big thanks to vedansh#4039
     try:
-        chat_info = get_chat_lurkers(self)
+        chat_info = get_chat_lurkers(sub_client)
         chat_info = chat_info['userInfoInThread'][chatId]
         names = [name['nickname'] for name in chat_info['userProfileList']]
         count = chat_info['userProfileCount']
@@ -498,7 +304,7 @@ def mafia_roles(content: list):
 
 def mention(message: str, chat_info: amino.lib.util.Thread, sub_client: amino.SubClient):
     chat_id = chat_info.chatId
-    if not message: message = 'Notify!\n'
+    if not message: message = f'[bc]{chat_info.title}!\n'
     else: message = ' '.join(message) + '\n'
     chat_members = chat_info.membersCount - (chat_info.membersCount % 100 - 1)
     mention_ids = [sub_client.get_chat_users(chatId=chat_id, start=i, size=100).userId for i in range(0, chat_members, 100)]
@@ -507,7 +313,7 @@ def mention(message: str, chat_info: amino.lib.util.Thread, sub_client: amino.Su
     return message, message_mention, mention_ids
 
 
-def report(content: list, user_id: str, com_id: str, chat_id: str, msg_time: str):
+def report(client: amino.Client, content: list, user_id: str, com_id: str, chat_id: str, msg_time: str):
     if len(content) == 0: raise Exception('No message after "report"')  # just '!report'
     try: user_link = client.get_from_id(user_id, 0, comId=com_id).shortUrl
     except Exception: user_link = '-'
@@ -535,15 +341,6 @@ def save_chat(chat_id: str, sub_client: amino.SubClient):  # Save chat info in d
     chat = sub_client.get_chat_thread(chat_id)
     chat_id, chat_name, chat_icon, chat_bg, chat_desc = chat.chatId, chat.title, chat.icon, chat.backgroundImage, chat.content
     return database.save_chat_in_db(chat_id, chat_name, chat_icon, chat_bg, chat_desc)
-
-
-def stop_duel(first: str, second: str):
-    del duels_first_dict[first]
-    del duels_second_dict[second]
-    if first in duels_started.keys():
-        del duels_started[first]
-    if second in duels_started.keys():
-        del duels_started[second]
 
 
 def upload_chat(chat_id: str, sub_client: amino.SubClient):

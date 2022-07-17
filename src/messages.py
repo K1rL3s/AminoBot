@@ -13,7 +13,7 @@ Send {PREFIX}(category) for command list.
 The values in (brackets) are required.
 The values in [brackets] are optional.
 [i]Not case-sensitive.
-GitHub Link - github.com/K1rL3s/aminobot
+GitHub Link - github.com/K1rL3s/AminoBot
 """,
 
 
