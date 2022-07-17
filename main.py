@@ -128,7 +128,7 @@ def on_text_message(data):
             if answer == 'ok':
                 return sub_client.send_message(**kwargs, message="You've taken your bet, the roulette keeps turning.")
 
-        if not (content[1].isdigit() or content[1] in ('red', 'black', 'green')):
+        if not (content[1].isdigit() or content[1] in ('red', 'black', 'green', 'odd', 'even')):
             return
 
         if content[1].isdigit():
