@@ -126,7 +126,7 @@ def on_text_message(data):
             if answer == 'deleted':
                 return sub_client.send_message(**kwargs, message='The roulette is stopped, there are no players left at the table.')
             if answer == 'ok':
-                return sub_client.send_message(**kwargs, message="You've taken your bet, the roulette keeps turning.")
+                return sub_client.send_message(**kwargs, message="You've taken your bet, the roulette keeps spinning.")
 
         if not (content[1].isdigit() or content[1] in ('red', 'black', 'green', 'odd', 'even')):
             return
@@ -195,32 +195,19 @@ def on_text_message(data):
         if len(content) == 1:
             return sub_client.send_message(**kwargs, message=system_messages['duel'])
 
-        if content[1] == 'no':
-            if author_id in duels_first_dict.keys():
-                second = duels_first_dict[author_id][1]
-                stop_duel(author_id, second)
-                return sub_client.send_message(**kwargs, message='Your duel request has been cancelled.')
-            if author_id in duels_second_dict.keys():
-                first = duels_second_dict[author_id]
-                stop_duel(first, author_id)
-                return sub_client.send_message(**kwargs, message='Your duel request has been cancelled.')
-            return sub_client.send_message(**kwargs, message='You dont have any requests.')
-
         if content[1] == 'send':
             first = author_id
             second = data['chatMessage']['extensions']['mentionedArray'][0]['uid']
-            if first in duels_first_dict.keys() or first in duels_second_dict.keys():
+            if first in (*duels_first_dict.keys(), *duels_second_dict.keys()):
                 return sub_client.send_message(**kwargs, message='You cant send duels right now.')
-            if second in duels_second_dict.keys() or second in duels_first_dict.keys():
+            if second in (*duels_second_dict.keys(), *duels_first_dict.keys()):
                 return sub_client.send_message(**kwargs, message='Cannot send duel to this user.')
-            if second == client.userId:
+            if second in (client.userId, first):
                 return sub_client.send_message(**kwargs, message='You are so smart, pretty kid.')
             second_name = sub_client.get_user_info(userId=second).nickname
-            duel = Duel(author_id, second, author_name, second_name, chat_id)
-            duels_first_dict[author_id] = tuple([duel, second])
-            duels_second_dict[second] = author_id
-            sub_client.send_message(**kwargs, message=
-                                    f'Waiting for accept the duel by {second_name}...\n'
+            Duel(first, second, author_name, second_name)
+            sub_client.send_message(**kwargs, mentionUserIds=[second], message=
+                                    f'Waiting for accept the duel by <${second_name}$>...\n'
                                     f'({PREFIX}duel yes, {PREFIX}duel no)')
             return
 
@@ -239,25 +226,32 @@ def on_text_message(data):
                                     f'({PREFIX}duel shot, <${duel.who_start_name}$> starts)')
             return
 
+        if content[1] == 'no':
+            if author_id in duels_first_dict.keys():
+                duels_first_dict[author_id][0].stop_duel()
+                return sub_client.send_message(**kwargs, message='Your duel request has been cancelled.')
+            if author_id in duels_second_dict.keys():
+                duels_first_dict[duels_second_dict[author_id]][0].stop_duel()
+                return sub_client.send_message(**kwargs, message='Your duel request has been cancelled.')
+            return sub_client.send_message(**kwargs, message='You dont have any requests.')
+
         if content[1] == 'shot':
             if author_id not in duels_started.keys():
                 return sub_client.send_message(**kwargs, message='You dont have a duel right now.')
             duel = duels_started[author_id]
             message = duel.shot(author_id)
-            if message == 'nostart':
-                return sub_client.send_message(**kwargs, message='The duel hasnt started yet!')
+            # if message == 'nostart':
+            #     return sub_client.send_message(**kwargs, message='The duel hasnt started yet!')
             if message == 'noturn':
                 return sub_client.send_message(**kwargs, message='Not your turn!')
             if message == 'miss':
                 return sub_client.send_message(**kwargs, message=f'Miss. Next player, shoot!\n'
                                                                  f'Shots: {duel.shots}')
             if message == 'win':
-                name = duel.first_name if author_id == duel.first else duel.second_name
                 sub_client.send_message(**kwargs, mentionUserIds=[author_id], message=
-                                        f'[bc]Hit! <${name}$> won this duel!\n'
+                                        f'[bc]Hit! <${author_name}$> won this duel!\n'
                                         f'[c]Total shots: {duel.shots}')
-                stop_duel(duel.first, duel.second)
-                return
+            return
 
     if content[0] == 'endvc':
         if client.userId not in chat_managers:
@@ -363,7 +357,9 @@ def on_text_message(data):
         return sub_client.send_message(**kwargs, message='Your message has been sent to the person who hosts the bot!')
 
     if content[0] == 'roll':
-        return sub_client.send_message(**kwargs, message=roll(content))
+        if len(content[1:]) > 3:
+            return
+        return sub_client.send_message(**kwargs, message=roll(content[1:]))
 
     if content[0] == 'rr':
         if len(content) == 1:
@@ -419,7 +415,8 @@ def on_text_message(data):
                 return sub_client.send_message(**kwargs, message=f'Use [{PREFIX}rr stop] to delete your room.')
             rr.remove_member(author_id, author_name)
             sub_client.send_message(**kwargs, message=f'Successfully leaved from the game room "{room_name}".')
-            if not rr.started: return
+            if not rr.started:
+                return
             chat_id = rr.chat_id
             sub_client = subs[rr.com_id]
             if rr.finish():
@@ -436,7 +433,7 @@ def on_text_message(data):
             return sub_client.send_message(**kwargs, message='The game is in another chat.')
 
         if content[1] == 'list':
-            return sub_client.send_message(**kwargs, message='\n'.join(rr.list()))
+            return sub_client.send_message(**kwargs, message=rr.list())
 
         if content[1] == 'kick':
             kick_id = data['chatMessage']['extensions']['mentionedArray'][0]['uid']
@@ -465,6 +462,7 @@ def on_text_message(data):
             if answer == 'ok':
                 return sub_client.send_message(**kwargs, message=f'The player succesfully banned!'
                                                                  f'\nUse "{PREFIX}rr kick @notify" to kick.')
+
         if content[1] == 'unban':
             unban_id = data['chatMessage']['extensions']['mentionedArray'][0]['uid']
             if unban_id == rr.org_id:
@@ -498,9 +496,10 @@ def on_text_message(data):
                 if len(rr.players) == 1:
                     sub_client.send_message(**kwargs, mentionUserIds=[rr.players[0][0]], message=
                                             '[BC]BOOM!\n[c]You are dead!\n')
-                else: sub_client.send_message(**kwargs, mentionUserIds=[rr.players[0][0]], message=
-                                              '[BC]BOOM!\n'f'[c]You are dead! '
-                                              f'{len(rr.players) - 1} round(s) left.\n[c]Next player:\n[c]<${rr.players[0][1]}$>')
+                else:
+                    sub_client.send_message(**kwargs, mentionUserIds=[rr.players[0][0]], message=
+                                            '[BC]BOOM!\n'f'[c]You are dead! '
+                                            f'{len(rr.players) - 1} round(s) left.\n[c]Next player:\n[c]<${rr.players[0][1]}$>')
 
             if answer == 'miss':
                 return sub_client.send_message(**kwargs, mentionUserIds=[rr.players[0][0]], message=
