@@ -12,11 +12,10 @@ casino_chats = dict()       # chatId : Casino Object
 
 
 class Duel:
-    def __init__(self, first: str, second: str, f_name: str, s_name: str, chat_id: str):  # ids
+    def __init__(self, first: str, second: str, f_name: str, s_name: str):  # ids
         # first and second is userIds
         self.first = first
         self.second = second
-        self.chat_id = chat_id
         self.first_name = f_name
         self.second_name = s_name
         self.shots = 0
@@ -27,10 +26,20 @@ class Duel:
         else:
             self.who_start_name = s_name
             self.who_start_id = second
+        duels_first_dict[first] = [self, second]
+        duels_second_dict[second] = first
 
     def start_duel(self):
         duels_started[self.first], duels_started[self.second] = self, self
         self.start = True
+
+    def stop_duel(self):
+        del duels_first_dict[self.first]
+        del duels_second_dict[self.second]
+        if self.first in duels_started.keys():
+            del duels_started[self.first]
+        if self.second in duels_started.keys():
+            del duels_started[self.second]
 
     def shot(self, user_id: str):
         if not self.start:
@@ -38,11 +47,17 @@ class Duel:
         if user_id == self.who_start_id:
             if self.shots % 2 == 0:
                 self.shots += 1
-                return rnd.choices(('win', 'miss'), weights=(25, 75))[0]
+                shot = rnd.choices(('win', 'miss'), weights=(25, 75))[0]
+                if shot == 'win':
+                    self.stop_duel()
+                return shot
             return 'noturn'
         if self.shots % 2 == 1:
             self.shots += 1
-            return rnd.choices(('win', 'miss'), weights=(25, 75))[0]
+            shot = rnd.choices(('win', 'miss'), weights=(25, 75))[0]
+            if shot == 'win':
+                self.stop_duel()
+            return shot
         return 'noturn'
 
 
@@ -58,9 +73,6 @@ class RussianRoulette:
         self.add_member(org_id, org_name)
         self.bullets = [0, 0, 0, 0, 0, 0]
         rr_rooms[roulette_name] = tuple([self, chat_id])
-    
-    def __len__(self):
-        return len(self.players)
 
     def add_member(self, player_id: str, player_name: str):
         if self.started: return 'gamestarted'
@@ -108,7 +120,7 @@ class RussianRoulette:
         return False
 
     def list(self):
-        return [f'{len(self.players)} players in "{self.roulette_name}":'] + [player[1] for player in self.players]
+        return '\n'.join([f'{len(self.players)} players in "{self.roulette_name}":'] + [player[1] for player in self.players])
 
     def kick(self, player_id: str):
         for player in self.players:
@@ -179,7 +191,7 @@ class CasinoRoulette:
         else:
             odd_or_even = None
 
-        result_number = str(result_number) if result_number in range(0, 37) else '00'
+        result_number = str(result_number) if result_number in range(0, 37) else '00'  # [0; 36] cast to str, else "00"
 
         message = [f'[bc]Roulette!\n[c]Result: {result_number} {color}, {odd_or_even}.\n', 'Winners:']
         mention_users = []
@@ -194,12 +206,3 @@ class CasinoRoulette:
 
         self.sub_client.send_message(self.chat_id, '\n'.join(message), mentionUserIds=mention_users)
         del casino_chats[self.chat_id]
-
-
-def stop_duel(first: str, second: str):  # user ids
-    del duels_first_dict[first]
-    del duels_second_dict[second]
-    if first in duels_started.keys():
-        del duels_started[first]
-    if second in duels_started.keys():
-        del duels_started[second]

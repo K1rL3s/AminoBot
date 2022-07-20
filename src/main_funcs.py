@@ -264,7 +264,7 @@ def get_chat_lurkers(self: amino.SubClient, start: int = 0, size: int = 100):  #
     response = requests.get(f"{self.api}/x{self.comId}/s/live-layer/public-chats?start={start}&size={size}", headers=self.parse_headers(), proxies=self.proxies, verify=self.certificatePath)
     return amino.loads(response.text)
 
-
+# TODO: rewrite this shit
 def id_from_url(url: str, client: amino.Client):
     url = url.strip('.,/')
     try:
@@ -323,8 +323,8 @@ def report(client: amino.Client, content: list, user_id: str, com_id: str, chat_
     return message
 
 
-def roll(content: list):
-    content = list(map(int, content[1:]))
+def roll(content):
+    content = list(map(int, content))
     if len(content) == 0:
         return f"🎲 {rnd.randint(1, 100)} (1, 100)"
     if len(content) == 1:
@@ -334,7 +334,6 @@ def roll(content: list):
     if len(content) == 3:
         rolls = [str(rnd.randint(content[0], content[1])) for _ in range(content[2])]
         return f"🎲 {', '.join(rolls)} ({content[0]}, {content[1]})"
-    raise ValueError
 
 
 def save_chat(chat_id: str, sub_client: amino.SubClient):  # Save chat info in database.db
