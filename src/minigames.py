@@ -3,11 +3,11 @@ import random as rnd
 from threading import Timer
 
 
-duels_first_dict = dict()   # userId who invited : Duel Object
+duels_first_dict = dict()   # userId who invited : [Duel Object, userId who was invited]
 duels_second_dict = dict()  # userId who was invited : userId who invited
-duels_started = dict()      # userIds who is currently dueling : Duel Object
-rr_rooms = dict()           # name_rr : (RR object, chat_id)
-rr_members = dict()         # member_id : name_rr
+duels_started = dict()      # userId who is currently dueling : Duel Object
+rr_rooms = dict()           # name_rr : [RR Object, chat_id]
+rr_members = dict()         # userId : name_rr
 casino_chats = dict()       # chatId : Casino Object
 
 
