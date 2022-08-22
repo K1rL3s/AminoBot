@@ -261,13 +261,13 @@ def on_text_message(data):
 
     if content[0] == 'fancy':
         text = ' '.join(msg_content[len(PREFIX) + 6:].split())
-        if len(text) == 0:
-            text = 'Bruh'
-        text = text[:60] if len(text) > 60 else text  # 2000 / 33 = 60 symbols is max, 2k is limit for message
+        if not text:
+            text = 'Bruh...'
+        text = text[:60]  # 2000 / 33 = 60 symbols is max, 2k is limit for message
         data = {'text': text, 'mode': 1}
         req = requests.post('https://finewords.ru/beafonts/gofonts.php', data=data)
         req.encoding = 'utf-8'
-        return sub_client.send_message(**kwargs, message='\n'.join(list(set([item for item in req.json().values()]))))
+        return sub_client.send_message(**kwargs, message='\n'.join(sorted(set(item for item in req.json().values()))))
 
     if content[0] == 'follow':
         sub_client.follow(userId=author_id)
@@ -288,16 +288,16 @@ def on_text_message(data):
         if com_id_to_join not in client.sub_clients(start=0, size=100).comId:  # more than 100?
             try:
                 client.join_community(comId=com_id_to_join)
-                sub_client.send_message(**kwargs, message='Joined the community...')
             except Exception as e:
                 return sub_client.send_message(**kwargs, message=f'Cannot join community.\n{e}')
+            sub_client.send_message(**kwargs, message='Joined the community...')
 
-        sub_client_to_join = amino.SubClient(comId=com_id_to_join, profile=client.profile)
         try:
+            sub_client_to_join = amino.SubClient(comId=com_id_to_join, profile=client.profile) if com_id_to_join != com_id else sub_client
             sub_client_to_join.join_chat(chatId=chat_id_to_join)
-            return sub_client.send_message(**kwargs, message='Joined the chat!')
         except Exception as e:
             return sub_client.send_message(**kwargs, message=f'Cannot join chat.\n{e}')
+        return sub_client.send_message(**kwargs, message='Joined the chat!')
 
     if content[0] == 'joincom':
         com_id_to_join = client.get_from_code(content[1]).comId
@@ -305,9 +305,9 @@ def on_text_message(data):
             return sub_client.send_message(**kwargs, message='Im already in this community.')
         try:
             client.join_community(comId=com_id_to_join)
-            return sub_client.send_message(**kwargs, message='Joined the community.')
         except Exception as e:
             return sub_client.send_message(**kwargs, message=f'Cannot join community.\n{e}.')
+        return sub_client.send_message(**kwargs, message='Joined the community.')
 
     if content[0] == 'kickorg':  # like a prank
         sub_client.send_message(**kwargs, mentionUserIds=[author_id], message=f'Starting host transfer to <${author_name}$>...')
@@ -361,6 +361,7 @@ def on_text_message(data):
             return
         return sub_client.send_message(**kwargs, message=roll(content[1:]))
 
+    # I hate that
     if content[0] == 'rr':
         if len(content) == 1:
             return sub_client.send_message(**kwargs, message=system_messages['rr'])
