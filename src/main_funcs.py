@@ -264,14 +264,6 @@ def get_chat_lurkers(self: amino.SubClient, start: int = 0, size: int = 100):  #
     response = requests.get(f"{self.api}/x{self.comId}/s/live-layer/public-chats?start={start}&size={size}", headers=self.parse_headers(), proxies=self.proxies, verify=self.certificatePath)
     return amino.loads(response.text)
 
-# TODO: rewrite this shit
-def id_from_url(url: str, client: amino.Client):
-    url = url.strip('.,/')
-    try:
-        from_code = client.get_from_code(url)
-        return from_code.objectId if from_code.objectId is not None else from_code.comId
-    except Exception: return 'None'
-
 
 def lurk_list(sub_client: amino.SubClient, chatId: str):  # big thanks to vedansh#4039
     try:
