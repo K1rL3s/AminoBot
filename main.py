@@ -152,8 +152,8 @@ def on_text_message(data):
 
     if content[0] == 'chat':
         if len(content) != 1:  # for call with link
-            chat_id = id_from_url(content[1], client)
-            if chat_id in ('None', None):  # bad link etc
+            chat_id = client.get_from_code(content[1]).objectId
+            if not chat_id:  # bad link etc
                 return sub_client.send_message(**kwargs, message='Bad argument (link).')
         try: chat_message = func_chat_info(chat_id, sub_client, sub_client)
         except Exception as error:
@@ -176,8 +176,8 @@ def on_text_message(data):
 
     if content[0] == 'com':
         if len(content) != 1:  # for call with link
-            com_id = id_from_url(content[1], client)
-            if com_id in ('None', None):  # bad link etc
+            com_id = client.get_from_code(content[1]).comId
+            if not com_id:  # bad link etc
                 return sub_client.send_message(**kwargs, message='Bad argument (link).')
         try: com_message = func_com_info(com_id, client)
         except Exception as error:
@@ -274,8 +274,9 @@ def on_text_message(data):
         return sub_client.send_message(**kwargs, message='Successful subscription!')
 
     if content[0] == 'get':
-        url_id = str(id_from_url(content[1], client))
-        if url_id in ('None', None):  #  bad link etc
+        url_info = client.get_from_code(content[1])
+        url_id = url_info.comId if url_info.comId else url_info.objectId
+        if not url_id:  #  bad link etc
             return sub_client.send_message(**kwargs, message='Bad argument (link).')
         return sub_client.send_message(**kwargs, message=url_id)
 
@@ -575,8 +576,8 @@ def on_text_message(data):
 
     if content[0] == 'user':
         if len(content) != 1:  # for call with link
-            author_id = id_from_url(content[1], client)
-            if author_id in ('None', None):  # bad link etc
+            author_id = client.get_from_code(content[1]).objectId
+            if not author_id:  # bad link etc
                 return sub_client.send_message(**kwargs, message='Bad argument (link).')
         try: user_message = func_user_info(author_id, client, sub_client)
         except Exception as e:
