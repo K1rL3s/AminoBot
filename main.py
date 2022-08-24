@@ -189,7 +189,7 @@ def on_text_message(data):
         if len(content) != 1:
             rating = content[1] if content[1] in ('pg', 'pg13', 'r') else 'pg'
         dare = requests.get(f'https://api.truthordarebot.xyz/api/dare?rating={rating}').json()
-        sub_client.send_message(**kwargs, message=dare['question'])
+        return sub_client.send_message(**kwargs, message=dare['question'])
     
     if content[0] == 'duel':
         if len(content) == 1:
@@ -559,7 +559,7 @@ def on_text_message(data):
         if len(content) != 1:
             rating = content[1] if content[1] in ('pg', 'pg13', 'r') else 'pg'
         truth = requests.get(f'https://api.truthordarebot.xyz/api/truth?rating={rating}').json()
-        sub_client.send_message(**kwargs, message=truth['question'])
+        return sub_client.send_message(**kwargs, message=truth['question'])
 
     if content[0] == 'unfollow':
         sub_client.unfollow(userId=author_id)
