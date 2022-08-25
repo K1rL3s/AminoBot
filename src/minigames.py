@@ -365,7 +365,7 @@ class LadderGame:
         mine = rnd.randint(1, 4)
         if column == mine:
             self.stop()
-            return 'gameover', self.view_field()
+            return 'gameover', self.level - 1
         if self.level == 5:
             self.stop()
             return 'win', self.update_field(mine, self.level)
