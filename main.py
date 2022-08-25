@@ -342,6 +342,45 @@ def on_text_message(data):
         sub_client.send_message(chatId=chat_id, messageType=107, message=f'{chat_host_name} has left the conversation.')
         return
 
+    if content[0] == 'ladder':
+        if len(content) == 1:
+            return sub_client.send_message(**kwargs, message=system_message['ladder'])
+
+        if content[1] == 'start':
+            if author_id in ladder_members.keys():
+                return sub_client.send_message(**kwargs, message='You are already playing.')
+            ladder = LadderGame(author_name, author_id)
+            return sub_client.send_message(**kwargs, message=f'[bc]{ladder.user_name}\n'
+                                                             f'{ladder.view_field()}')
+
+        if content[1] == 'stop':
+            if author_id not in ladder_members.keys():
+                return sub_client.send_message(**kwargs, message='You dont play.')
+            ladder = ladder_members[author_id]
+            ladder.stop()
+            return sub_client.send_message(**kwargs, message='Game over.')
+
+        if content[1] == 'field':
+            if author_id not in ladder_members.keys():
+                return sub_client.send_message(**kwargs, message='You dont play.')
+            ladder = ladder_members[author_id]
+            return sub_client.send_message(**kwargs, message=f'[bc]{ladder.user_name}\n'
+                                                             f'{ladder.view_field()}')
+
+        if content[1] in ('a', 'b', 'c', 'd'):
+            if author_id not in ladder_members.keys():
+                return sub_client.send_message(**kwargs, message='You dont play.')
+            ladder = ladder_members[author_id]
+            answer, field = ladder.game(content[1])
+            if answer == 'gameover':
+                return sub_client.send_message(**kwargs, message=f'[cb]You lose.\n[c]Passed levels: {field}')
+            if answer == 'okay':
+                return sub_client.send_message(**kwargs, message=f'{ladder.user_name}\n'
+                                                                 f'{field}')
+            if answer == 'win':
+                return sub_client.send_message(**kwargs, message='[bc]Congratulations!\n'
+                                                                 f'{field}')
+
     if content[0] == 'lurk':  # thanks vedansh#4039
         return sub_client.send_message(**kwargs, message=lurk_list(sub_client, chat_id))
 
