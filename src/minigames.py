@@ -9,6 +9,7 @@ duels_started = dict()      # userId who is currently dueling : Duel Object
 rr_rooms = dict()           # name_rr : [RR Object, chat_id]
 rr_members = dict()         # userId : name_rr
 casino_chats = dict()       # chatId : Casino Object
+blackjack_players = dict()  # userId : BJ object
 
 
 class Duel:
@@ -206,3 +207,120 @@ class CasinoRoulette:
 
         self.sub_client.send_message(self.chat_id, '\n'.join(message), mentionUserIds=mention_users)
         del casino_chats[self.chat_id]
+
+        
+class Deck:  # Fluent Python, Luciano Ramalho
+    ranks = [str(n) for n in range(2, 11)] + list('JQKA')
+    suits = '♠ ♦ ♣ ♥'.split()
+
+    def __init__(self, shuffle: bool = False):
+        self._cards = [(rank, suit) for suit in self.suits for rank in self.ranks]
+        if shuffle:
+            rnd.shuffle(self._cards)
+
+    def __len__(self):
+        return len(self._cards)
+
+    def __getitem__(self, position):
+        return self._cards[position]
+
+    def __setitem__(self, position, card):
+        self._cards[position] = card
+
+    def pop(self, index: int = 0):
+        return self._cards.pop(index)
+
+
+class BlackJack:
+    def __init__(self, player_id: str):
+        self.player_id = player_id
+        self.deck = Deck(shuffle=True)
+        self.pc_cards = []
+        self.player_cards = []
+        self.finish = False
+        for _ in range(2):
+            self._add_card(self.pc_cards)
+            self._add_card(self.player_cards)
+        self.cost = {'2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9, '10': 10,
+                     'J': 10, 'Q': 10, 'K': 10, 'A': 11}
+        blackjack_players[player_id] = self
+
+    def _add_card(self, hand: list):
+        hand.append(self.deck.pop())
+
+    def _calculate(self, hand: list):
+        total, aces = 0, 0
+        for card in hand:
+            if card[0] == 'A' and aces:  # two aces = 11 + 1, three aces = 11 + 1 + 1
+                total += 1
+            else:
+                total += self.cost[card[0]]
+                if card[0] == 'A':
+                    aces += 1
+        if len(hand) == aces == 2:  # two aces is won
+            return 21
+        return total
+
+    def end_message(self, result: str):
+        self._someone_win()
+        message = f'[bc]{result}\n' + self.cards_to_text(check_autowin=False)
+        return message
+
+    def _someone_win(self):
+        self.finish = True
+        del blackjack_players[self.player_id]
+
+    def cards_to_text(self, check_autowin=True):
+        pc_score = self._calculate(self.pc_cards)
+        player_score = self._calculate(self.player_cards)
+        message = [f'[c]Dealer:',
+                   f'[c]{",  ".join([card[0] + card[1][0] for card in self.pc_cards])}',
+                   f'[c]Value: {pc_score}.\n',
+                   f'[c]You:',
+                   f'[c]{",  ".join([card[0] + card[1][0] for card in self.player_cards])}',
+                   f'[c]Value: {player_score}.\n']
+
+        if check_autowin:  # win with two cards
+            if player_score == 21 != pc_score:
+                message = ['[bc]You win!'] + message
+                self._someone_win()
+            elif pc_score == 21 != player_score:
+                message = ['[bc]You lose!'] + message
+                self._someone_win()
+            elif pc_score == player_score == 21:
+                message = ["[bc]It's a draw."] + message
+                self._someone_win()
+
+        if not self.finish:  # do not show second dealer's card
+            message[1] = f'[c]{",  ".join([card[0] + card[1][0] for card in self.pc_cards[:-1]])},  🃏?'
+            message[2] = f'[c]Value: {self._calculate(self.pc_cards[:-1])}.\n'
+
+        return '\n'.join(message)
+
+    def _pc_game(self):
+        pc_score = self._calculate(self.pc_cards)
+        player_score = self._calculate(self.player_cards)
+        if pc_score > 21 or player_score > pc_score >= 18:  # pc_score >= 18 and player_score > pc_score
+            return 'win'
+        if pc_score > player_score:
+            return 'lose'
+        if player_score == pc_score >= 18:
+            return 'draw'
+        self._add_card(self.pc_cards)
+        return self._pc_game()
+
+    def game(self, command: str):
+        if command == 'hit':
+            self._add_card(self.player_cards)
+            score = self._calculate(self.player_cards)
+            if score > 21:
+                return self.end_message('You lose!')
+            if score == 21:
+                return self.end_message('You win!')
+            return self.cards_to_text(check_autowin=False)
+
+        if command == 'stand':
+            result = self._pc_game()
+            if result != 'draw':
+                return self.end_message(f'You {result}!')
+            return self.end_message("It's a draw.")
