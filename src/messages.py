@@ -196,6 +196,18 @@ GitHub Link - github.com/K1rL3s/AminoBot
 [ci]{PREFIX}casino leave
 [c]Cancels your bet.
 """,
+    
+    "blackjack": f"""
+[bc]BlackJack
+[ic]{PREFIX}bj start
+[c]Starts a game.
+
+[ic]{PREFIX}bj leave
+[c]Stops a game.
+
+[ic]{PREFIX}bj hit/stand
+[c]Hit or stand
+""",
 
 
     "8ball": ('It is certain', 'It is decidedly so', 'Without a doubt', 'Yes — definitely', 'You may rely on it',
