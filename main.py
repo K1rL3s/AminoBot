@@ -50,7 +50,7 @@ def on_text_message(data):
     if author_id == client.userId:  # it was a very big exploit
         return
 
-    content[0] = content[0][len(PREFIX):]  # from ['!duel', 'yes'] to ['duel', 'yes'] (content is lower, line 38)
+    content[0] = content[0][len(PREFIX):]  # from ['!duel', 'yes'] to ['duel', 'yes'] (content is lower, line 45)
 
     blocked = list(database.blocked_commands_in_chat(chat_id).split())
     if 'all' in blocked and content[0] not in ('block', 'allow', 'blockedlist', 'help', 'chatmanage', 'report'):
@@ -99,6 +99,29 @@ def on_text_message(data):
         if database.allow_command_in_chat(chat_id, command):
             return sub_client.send_message(**kwargs, message=f'Command "{command}" allowed!')
         return sub_client.send_message(**kwargs, message=f'Cant allow this command!')
+    
+    if content[0] == 'bj':
+        if len(content) == 1:
+            return sub_client.send_message(**kwargs, message=system_messages['blackjack'])
+        
+        if content[1] == 'start':
+            if author_id in blackjack_players.keys():
+                return sub_client.send_message(**kwargs, message=f'You are already playing')
+            bj = BlackJack(author_id)
+            return sub_client.send_message(**kwargs, message=f'{bj.cards_to_text()}\n\n'
+                                                             f'[i]{PREFIX}bj hit - new card.\n'
+                                                             f'[i]{PREFIX}bj stand - dealer move.')
+
+        if content[1] == 'leave':
+            if author_id not in blackjack_players.keys():
+                return sub_client.send_message(**kwargs, message=f'You dont play.')
+            return sub_client.send_message(**kwargs, message=blackjack_players[author_id].end_message('Leave.'))
+
+        if content[1] in ('hit', 'stand'):
+            if author_id not in blackjack_players.keys():
+                return sub_client.send_message(**kwargs, message=f'You dont play.')
+            bj = blackjack_players[author_id]
+            return sub_client.send_message(**kwargs, message=bj.game(content[1]))
 
     if content[0] == 'block':
         if author_id not in chat_managers:
