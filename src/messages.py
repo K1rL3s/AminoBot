@@ -206,7 +206,23 @@ GitHub Link - github.com/K1rL3s/AminoBot
 [c]Stops a game.
 
 [ic]{PREFIX}bj hit/stand
-[c]Hit or stand
+[c]Hit or stand.
+""",
+    
+    "ladder": f"""
+[bc]Ladder Game
+[ic]{PREFIX}ladder start
+[c]Starts the game.
+
+[ic]{PREFIX}ladder stop
+[c]Ends the game.
+
+[ic]{PREFIX}ladder field
+[c]Shows the field.
+
+[ic]{PREFIX}ladder (Буква)
+[c]Move into this cell.
+[c]({PREFIX}ladder D)
 """,
 
 
