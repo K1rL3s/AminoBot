@@ -10,6 +10,7 @@ rr_rooms = dict()           # name_rr : [RR Object, chat_id]
 rr_members = dict()         # userId : name_rr
 casino_chats = dict()       # chatId : Casino Object
 blackjack_players = dict()  # userId : BJ object
+ladder_members = dict()     # userId : LadderGame object
 
 
 class Duel:
@@ -324,3 +325,49 @@ class BlackJack:
             if result != 'draw':
                 return self.end_message(f'You {result}!')
             return self.end_message("It's a draw.")
+
+
+class LadderGame:
+    def __init__(self, user_name, user_id):
+        self.user_name = user_name
+        self.user_id = user_id
+        self.level = 1
+        self.field = [
+                      ['[bc]', '  ', 'A', 'B', 'C', 'D'],
+                      ['[bic]1', '#', '#', '#', '#'],
+                      ['[bc]2', '#', '#', '#', '#'],
+                      ['[bc]3', '#', '#', '#', '#'],
+                      ['[bc]4', '#', '#', '#', '#'],
+                      ['[bc]5', '#', '#', '#', '#'],
+                      ['[c]End is here.']
+                     ]
+        self.abcd_int = {'a': 1, 'b': 2, 'c': 3, 'd': 4}
+        ladder_members[user_id] = self
+
+    def update_field(self, where_mine, update_level):
+        updated_row = [f'[bc]{update_level}', '–', '–', '–', '–']
+        updated_row[where_mine] = '*'
+        self.field[update_level] = updated_row
+        if update_level == 5:
+            self.field[-1] = ['[ibc]End is here.']
+        else:
+            self.field[self.level] = [f'[ibc]{self.level}'] + self.field[self.level][1:]
+        return self.view_field()
+
+    def stop(self):
+        del ladder_members[self.user_id]
+
+    def view_field(self):
+        return '\n'.join([' '.join(row) for row in self.field])
+
+    def game(self, column):
+        column = self.abcd_int[column]
+        mine = rnd.randint(1, 4)
+        if column == mine:
+            self.stop()
+            return 'gameover', self.view_field()
+        if self.level == 5:
+            self.stop()
+            return 'win', self.update_field(mine, self.level)
+        self.level += 1
+        return 'okay', self.update_field(mine, self.level - 1)
