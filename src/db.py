@@ -31,35 +31,22 @@ class Database:
             self.db.commit()
 
     def save_chat_in_db(self, chat_id: str, chat_name: str, chat_icon: str, chat_bg: str, chat_desc: str):
-        is_in_table = self.sql.execute(f"SELECT chat_id FROM chats WHERE chat_id = '{chat_id}'").fetchone()
+        is_in_table = self.sql.execute(f"SELECT chat_id FROM chats WHERE chat_id = ?", (chat_id,)).fetchone()
         if is_in_table is None:
-            self.sql.execute(f"""
-                             INSERT INTO chats VALUES (
-                             '{chat_id}',
-                             '{chat_name}',
-                             '{chat_icon}',
-                             '{chat_bg}',
-                             '{chat_desc}')
-                             """)
+            self.sql.execute("INSERT INTO chats VALUES (?, ?, ?, ?, ?)",
+                             (chat_id, chat_name, chat_icon, chat_bg, chat_desc))
         else:
-            self.sql.execute(f"""
-                             UPDATE chats SET
-                             chat_id = '{chat_id}',
-                             chat_name = '{chat_name}',
-                             chat_icon = '{chat_icon}',
-                             chat_bg = '{chat_bg}',
-                             chat_desc = '{chat_desc}' 
-                             WHERE chat_id = '{chat_id}'
-                             """)
+            self.sql.execute("""UPDATE chats SET chat_id = ?, chat_name = ?, chat_icon = ?, chat_bg = ?, chat_desc = ? 
+                             WHERE chat_id = ?""", (chat_id, chat_name, chat_icon, chat_bg, chat_desc, chat_id))
         self.db.commit()
         return True
 
     def return_chat_info_from_db(self, chat_id: str):
-        chat_info = self.sql.execute(f"SELECT * FROM chats WHERE chat_id = '{chat_id}'").fetchone()
+        chat_info = self.sql.execute(f"SELECT * FROM chats WHERE chat_id = ?", (chat_id,)).fetchone()
         return chat_info
 
     def blocked_commands_in_chat(self, chat_id: str):
-        commands = self.sql.execute(f"SELECT command FROM commands WHERE chat_id = '{chat_id}'").fetchone()
+        commands = self.sql.execute(f"SELECT command FROM commands WHERE chat_id = ?", (chat_id,)).fetchone()
         if commands is None:
             return ''
         return commands[0].strip()
@@ -67,28 +54,29 @@ class Database:
     def block_command_in_chat(self, chat_id: str, command: str):
         if command in ('block', 'allow', 'blockedlist', 'report'):
             return False
-        is_in_table = self.sql.execute(f"SELECT chat_id FROM commands WHERE chat_id = '{chat_id}'").fetchone()
+        is_in_table = self.sql.execute(f"SELECT chat_id FROM commands WHERE chat_id = ?", (chat_id,)).fetchone()
         if is_in_table is None:
-            self.sql.execute(f"INSERT INTO commands VALUES ('{chat_id}', '{command}')")
+            self.sql.execute(f"INSERT INTO commands VALUES (?, ?)", (chat_id, command))
         else:
-            commands = self.sql.execute(f"SELECT command FROM commands WHERE chat_id = '{chat_id}'").fetchone()[0].strip()
+            commands = self.sql.execute(f"SELECT command FROM commands WHERE chat_id = ?",
+                                        (chat_id,)).fetchone()[0].strip()
             commands = list(commands.split())
             if command not in commands:
                 commands.append(command)
             commands = ' '.join(commands)
-            self.sql.execute(f"UPDATE commands SET command = ('{commands}') WHERE chat_id = '{chat_id}'")
+            self.sql.execute(f"UPDATE commands SET command = ? WHERE chat_id = ?", (commands, chat_id))
         self.db.commit()
         return True
 
     def allow_command_in_chat(self, chat_id: str, command: str):
         if command in ('block', 'allow', 'blockedlist', 'report'):
             return False
-        commands = self.sql.execute(f"SELECT command FROM commands WHERE chat_id = '{chat_id}'").fetchone()
+        commands = self.sql.execute(f"SELECT command FROM commands WHERE chat_id = ?", (chat_id,)).fetchone()
         commands = '' if commands is None else commands[0]
         commands = list(commands.split())
         if command in commands:
             commands.remove(command)
         commands = ' '.join(commands)
-        self.sql.execute(f"UPDATE commands SET command = ('{commands}') WHERE chat_id = '{chat_id}'")
+        self.sql.execute(f"UPDATE commands SET command = ? WHERE chat_id = ?", (commands, chat_id)).fetchone()
         self.db.commit()
         return True
