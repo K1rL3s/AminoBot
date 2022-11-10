@@ -14,4 +14,4 @@ Only supports Python >=3.6, to install amino.fix, run `pip install amino.fix`.
 6. Enjoy.
 
 ### Useful discord servers:
-[Dev Land](https://discord.com/invite/68wchgsKdX), [Amino.fix](https://discord.gg/Bf3dpBRJHj), [TechVision](https://discord.gg/JyVZEVXGZE), I'm - K1rLes#3663 
+[Dev Land](https://discord.com/invite/68wchgsKdX), [Amino.fix](https://discord.gg/Bf3dpBRJHj), [TechVision](https://discord.gg/JyVZEVXGZE)
